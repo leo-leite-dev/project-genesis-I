@@ -1,0 +1,28 @@
+# Visual Studio
+*.sln
+*.slnx
+*.csproj
+*.user
+*.userprefs
+
+# Rider
+.idea/
+
+# VS Code (opcional)
+.vscode/
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+UserSettings/
+MemoryCaptures/
+
+# Builds
+[Bb]uild/
+[Bb]uilds/
+
+# Sistema
+.DS_Store
+Thumbs.db
