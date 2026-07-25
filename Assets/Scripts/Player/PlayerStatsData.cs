@@ -4,4 +4,5 @@ using UnityEngine;
 public class PlayerStatsData : ScriptableObject
 {
     public float baseMoveSpeed = 5f;
+    public int baseLife = 3;
 }

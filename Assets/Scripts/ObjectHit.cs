@@ -2,15 +2,12 @@ using UnityEngine;
 
 public class ObjectHit : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField]
+    private int damage = 1;
 
-    // Update is called once per frame
-    void Update()
+    private void OnCollisionEnter(Collision collision)
     {
-        
+        if (collision.gameObject.TryGetComponent(out PlayerStats playerStats))
+            playerStats.TakeDamage(damage);
     }
 }
