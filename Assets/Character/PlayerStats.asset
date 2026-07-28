@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: PlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsData
   baseMoveSpeed: 4
-  baseLife: 3
+  baseHearts: 3
+  baseLife: 5

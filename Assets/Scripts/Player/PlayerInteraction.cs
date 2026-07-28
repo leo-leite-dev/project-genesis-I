@@ -15,6 +15,10 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField]
     private LayerMask interactableLayer;
 
+    [Header("Dialogue")]
+    [SerializeField]
+    private DialogueController dialogueController;
+
     private InteractionPrompt currentPrompt;
     private InteractableActivator currentActivator;
 
@@ -25,8 +29,31 @@ public class PlayerInteraction : MonoBehaviour
 
     private void Update()
     {
+        if (HandleDialogue())
+            return;
+
         DetectInteractable();
         TryInteract();
+    }
+
+    private bool HandleDialogue()
+    {
+        if (dialogueController == null)
+            return false;
+
+        if (!dialogueController.IsOpen)
+            return false;
+
+        HideCurrentPrompt();
+
+        if (!inputReader.InteractPressed)
+            return true;
+
+        inputReader.ConsumeInteract();
+
+        dialogueController.Hide();
+
+        return true;
     }
 
     private void DetectInteractable()
@@ -75,5 +102,14 @@ public class PlayerInteraction : MonoBehaviour
             return;
 
         currentActivator.Activate();
+    }
+
+    private void HideCurrentPrompt()
+    {
+        if (currentPrompt != null)
+            currentPrompt.Hide();
+
+        currentPrompt = null;
+        currentActivator = null;
     }
 }
