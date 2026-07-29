@@ -2,25 +2,34 @@ using UnityEngine;
 
 public class PlayerAnimationEvents : MonoBehaviour
 {
-    private PlayerMovement playerMovement;
+    private PlayerDashController dashController;
 
     private void Awake()
     {
-        playerMovement = GetComponentInParent<PlayerMovement>();
+        dashController = GetComponentInParent<PlayerDashController>();
     }
 
     public void StartDashBoost()
     {
-        playerMovement.StartDashBoost();
+        if (dashController == null)
+            return;
+
+        dashController.StartDashBoost();
     }
 
     public void EndDashBoost()
     {
-        playerMovement.EndDashBoost();
+        if (dashController == null)
+            return;
+
+        dashController.EndDashBoost();
     }
 
     public void EndDash()
     {
-        playerMovement.EndDash();
+        if (dashController == null)
+            return;
+
+        dashController.EndDash();
     }
 }

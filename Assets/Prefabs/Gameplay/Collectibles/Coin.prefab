@@ -121,13 +121,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Coin
   value: 1
+  collectSound: {fileID: 8300000, guid: 84bc9e26794d38543ae72c6b4eae8a0c, type: 3}
+  collectSoundVolume: 0.5
   riseHeight: 1
   riseDuration: 0.5
   collectRotationSpeedY: 720
   collectScale: 1
+  cometDelay: 0.1
   collectEffect: {fileID: 8791802859067835849, guid: b0252f80efb8a484380907970a3e8fcd, type: 3}
   collectEffectHeightOffset: 0.3
-  cometDelay: 0.1
 --- !u!114 &8110532791720900634
 MonoBehaviour:
   m_ObjectHideFlags: 0

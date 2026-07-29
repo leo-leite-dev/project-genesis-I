@@ -1403,15 +1403,20 @@ GameObject:
   - component: {fileID: 8086271509732930029}
   - component: {fileID: 5392545083218001014}
   - component: {fileID: 3050964909244682468}
-  - component: {fileID: 1863800388990514971}
   - component: {fileID: 5618070858202857258}
   - component: {fileID: 8641047410203422815}
+  - component: {fileID: 1863800388990514971}
   - component: {fileID: 4261853434101089069}
-  - component: {fileID: 3150369236395513986}
+  - component: {fileID: 6621590207402248358}
+  - component: {fileID: 1721339615984843725}
+  - component: {fileID: 6874997876322434548}
+  - component: {fileID: 5571102099452184960}
   - component: {fileID: 4118830681312688234}
+  - component: {fileID: 3473022192115968589}
+  - component: {fileID: 4765698966412097601}
+  - component: {fileID: 3150369236395513986}
   - component: {fileID: 1883966421995238762}
   - component: {fileID: 8724787490671431098}
-  - component: {fileID: 3473022192115968589}
   m_Layer: 9
   m_Name: Player
   m_TagString: Player
@@ -1446,7 +1451,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4639283682780731344}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 1b4a8c36b1f25534eb36e06110a406eb, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -1519,31 +1524,6 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &1863800388990514971
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4639283682780731344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb98700b616b790499d7582a7bfe3aee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Mover
-  cameraTransform: {fileID: 0}
-  acceleration: 35
-  deceleration: 40
-  rotationSpeed: 10
-  canJump: 0
-  canDoubleJump: 0
-  jumpForce: 3
-  groundCheck: {fileID: 8226145983605159040}
-  groundCheckRadius: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  dashSpeedMultiplier: 1.5
 --- !u!114 &5618070858202857258
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1569,6 +1549,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
   data: {fileID: 11400000, guid: b42d0b75df412a940898c2451e520b5f, type: 2}
+--- !u!114 &1863800388990514971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb98700b616b790499d7582a7bfe3aee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Mover
+  cameraTransform: {fileID: 0}
+  acceleration: 35
+  deceleration: 40
+  rotationSpeed: 10
 --- !u!114 &4261853434101089069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1583,8 +1579,111 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCollisionResolver
   obstacleLayers:
     serializedVersion: 2
-    m_Bits: 9
-  collisionCheckDistance: 0.1
+    m_Bits: 264
+  collisionCheckDistance: 0.2
+  pushingThreshold: 0.5
+--- !u!114 &6621590207402248358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d74a40f932ab2e499fd27e42fb77c41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerJumpController
+  canJump: 0
+  canDoubleJump: 0
+  jumpForce: 8
+  groundCheck: {fileID: 0}
+  groundCheckRadius: 0.2
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+--- !u!114 &1721339615984843725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28750436c14beff4e8cc3f41297a79e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDashController
+  dashSpeedMultiplier: 1.8
+--- !u!114 &6874997876322434548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb413b1a07b3304fbc84f55dfc31a98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPushController
+  directionThreshold: 0.9
+--- !u!114 &5571102099452184960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52eae82e88d5b9d43b3b5719ddd3e8fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerKnockbackController
+--- !u!114 &4118830681312688234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d804f681d632f874eaf6b855c02a4c6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
+--- !u!114 &3473022192115968589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 275297688ab455e44bdcd2b0cc233f50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementVFX
+  runDust: {fileID: 8510689530630413167}
+--- !u!114 &4765698966412097601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11fc3e43c50823a4f87fb072e180bdf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDamage
+  invincibilityDuration: 0.8
+  knockbackForce: 3
+  knockbackUpForce: 1.2
+  knockbackDuration: 0.18
+  flashColor: {r: 0.8962264, g: 0.53326577, b: 0.10568706, a: 1}
+  flashCount: 5
+  flashInterval: 0.08
 --- !u!114 &3150369236395513986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1598,18 +1697,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerScore
   nextLifeAt: 10
---- !u!114 &4118830681312688234
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4639283682780731344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d804f681d632f874eaf6b855c02a4c6f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
 --- !u!114 &1883966421995238762
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1643,20 +1730,6 @@ MonoBehaviour:
   bubbleObject: {fileID: 8372970384688684617}
   messageText: {fileID: 7697266001033055903}
   visibleDuration: 4
---- !u!114 &3473022192115968589
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4639283682780731344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 275297688ab455e44bdcd2b0cc233f50, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementVFX
-  runDust: {fileID: 8510689530630413167}
-  minimumMoveDistance: 0.001
 --- !u!1 &4653827100734445728
 GameObject:
   m_ObjectHideFlags: 0
@@ -2844,11 +2917,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3833804427282375560, guid: 99e822ed6c57a284db5c548f55503321, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.059
       objectReference: {fileID: 0}
     - target: {fileID: 3833804427282375560, guid: 99e822ed6c57a284db5c548f55503321, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.582
+      value: -0.917
       objectReference: {fileID: 0}
     - target: {fileID: 3833804427282375560, guid: 99e822ed6c57a284db5c548f55503321, type: 3}
       propertyPath: m_LocalRotation.w

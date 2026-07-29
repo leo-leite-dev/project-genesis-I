@@ -11,7 +11,12 @@ public class SlowZone : MonoBehaviour
         if (other.TryGetComponent(out PlayerStats playerStats))
         {
             playerStats.ApplySlow(slowMultiplier);
-            Debug.Log("Entrou");
+
+            Debug.Log(
+                $"[SlowZone] ENTER | "
+                    + $"MoveSpeed = {playerStats.MoveSpeed} | "
+                    + $"IsSlowed = {playerStats.IsSlowed}"
+            );
         }
     }
 
@@ -20,7 +25,12 @@ public class SlowZone : MonoBehaviour
         if (other.TryGetComponent(out PlayerStats playerStats))
         {
             playerStats.RemoveSlow();
-            Debug.Log("Saiu");
+
+            Debug.Log(
+                $"[SlowZone] EXIT | "
+                    + $"MoveSpeed = {playerStats.MoveSpeed} | "
+                    + $"IsSlowed = {playerStats.IsSlowed}"
+            );
         }
     }
 }

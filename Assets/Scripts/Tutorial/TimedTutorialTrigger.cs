@@ -22,12 +22,8 @@ public class TimedTutorialTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Entrou na área: " + other.name);
-
         if (!other.CompareTag(playerTag))
             return;
-
-        Debug.Log("É o Player!");
 
         tutorialBubble = other.GetComponentInParent<TutorialBubble>();
 
@@ -36,8 +32,6 @@ public class TimedTutorialTrigger : MonoBehaviour
             Debug.LogWarning("TutorialBubble não encontrado no Player!");
             return;
         }
-
-        Debug.Log("TutorialBubble encontrado. Iniciando timer.");
 
         playerInside = true;
 
@@ -70,13 +64,8 @@ public class TimedTutorialTrigger : MonoBehaviour
     {
         yield return new WaitForSeconds(delayBeforeShow);
 
-        Debug.Log("Terminou os 3 segundos.");
-
         if (playerInside && tutorialBubble != null)
-        {
-            Debug.Log("Mostrando tutorial.");
             tutorialBubble.Show(message);
-        }
 
         showRoutine = null;
     }

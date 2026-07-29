@@ -1,7 +1,11 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(-100)]
+[RequireComponent(typeof(Rigidbody))]
 public class MovingPlatform : MonoBehaviour, IActivatable
 {
+    private Rigidbody rb;
+
     [Header("Movement")]
     [SerializeField]
     private Vector3 moveOffset = new Vector3(0f, 3f, 0f);
@@ -19,30 +23,41 @@ public class MovingPlatform : MonoBehaviour, IActivatable
     private bool isActive;
     private bool movingToTarget = true;
 
+    public Vector3 Position => rb.position;
+
     private void Awake()
     {
-        startPosition = transform.position;
+        rb = GetComponent<Rigidbody>();
+
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        startPosition = rb.position;
         targetPosition = startPosition + moveOffset;
 
         isActive = startActive;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (!isActive)
             return;
 
         Vector3 destination = movingToTarget ? targetPosition : startPosition;
 
-        transform.position = Vector3.MoveTowards(
-            transform.position,
+        Vector3 nextPosition = Vector3.MoveTowards(
+            rb.position,
             destination,
-            moveSpeed * Time.deltaTime
+            moveSpeed * Time.fixedDeltaTime
         );
 
-        if (Vector3.Distance(transform.position, destination) <= 0.01f)
+        rb.MovePosition(nextPosition);
+
+        if (Vector3.Distance(nextPosition, destination) <= 0.001f)
         {
-            transform.position = destination;
+            rb.MovePosition(destination);
+
             movingToTarget = !movingToTarget;
         }
     }

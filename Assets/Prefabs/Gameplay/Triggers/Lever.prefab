@@ -532,66 +532,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &3082065660013116572
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5074083635647467300}
-  - component: {fileID: 5778726358828206471}
-  m_Layer: 7
-  m_Name: InteractionSequenceActivator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5074083635647467300
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3082065660013116572}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2101106118525573288}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5778726358828206471
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3082065660013116572}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6736dc82c28d8be418501708971f1f0e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractionSequenceActivator
-  playerMovement: {fileID: 0}
-  playerCamera: {fileID: 0}
-  focusCamera: {fileID: 0}
-  focusPosition: {fileID: 0}
-  focusTarget: {fileID: 0}
-  blendDuration: 0.8
-  holdBeforeActivation: 0.4
-  holdAfterActivation: 1.5
-  focusPriority: 20
-  targets:
-  - {fileID: 0}
-  dialogueController: {fileID: 0}
-  title: 'Nova Habilidade: Salto'
-  message: "Voc\xEA ativou as plataformas e liberou o pr\xF3ximo caminho! Agora voc\xEA
-    consegue alcan\xE7ar lugares mais altos usando sua nova habilidade de salto.
-    Use a tecla Espa\xE7o para fazer seu personagem saltar."
 --- !u!1 &4903767688336528417
 GameObject:
   m_ObjectHideFlags: 0
@@ -693,7 +633,7 @@ GameObject:
   - component: {fileID: 2101106118525573288}
   - component: {fileID: 3998078109608727037}
   - component: {fileID: 1927576171340058217}
-  - component: {fileID: 4819188767381239209}
+  - component: {fileID: 9157906013337021645}
   m_Layer: 7
   m_Name: Lever
   m_TagString: Untagged
@@ -716,7 +656,7 @@ Transform:
   m_Children:
   - {fileID: 813998498393054154}
   - {fileID: 2748519927918426577}
-  - {fileID: 5074083635647467300}
+  - {fileID: 2509441520107317463}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3998078109608727037
@@ -744,10 +684,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44cd16114e296b44e83be9347104a377, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableActivator
-  targets:
-  - {fileID: 5778726358828206471}
+  target: {fileID: 5029558870488452570}
   activationDelay: 0
---- !u!114 &4819188767381239209
+--- !u!114 &9157906013337021645
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -756,10 +695,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 5029558870488452570}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0037953223c77d54ca7055314be7f0dd, type: 3}
+  m_Script: {fileID: 11500000, guid: 6736dc82c28d8be418501708971f1f0e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::JumpUnlockActivator
+  m_EditorClassIdentifier: Assembly-CSharp::InteractionSequenceActivator
   playerMovement: {fileID: 0}
+  playerCamera: {fileID: 0}
+  focusCamera: {fileID: 0}
+  focusPosition: {fileID: 0}
+  focusTarget: {fileID: 0}
+  blendDuration: 0.8
+  holdBeforeActivation: 0.4
+  holdAfterActivation: 1.5
+  focusPriority: 20
+  targets:
+  - {fileID: 0}
+  - {fileID: 6025378878488859071}
+  dialogueController: {fileID: 0}
+  title: 'Nova Habilidade: Salto'
+  message: "Voc\xEA ativou as plataformas e liberou o pr\xF3ximo caminho! Agora voc\xEA
+    consegue alcan\xE7ar lugares mais altos usando sua nova habilidade de salto.
+    Use a tecla Espa\xE7o para fazer seu personagem saltar."
 --- !u!1 &8233229068054536127
 GameObject:
   m_ObjectHideFlags: 0
@@ -792,6 +747,51 @@ Transform:
   - {fileID: 333123219715057124}
   m_Father: {fileID: 2101106118525573288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8322334601197886819
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2509441520107317463}
+  - component: {fileID: 6025378878488859071}
+  m_Layer: 7
+  m_Name: JumpUnlock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2509441520107317463
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8322334601197886819}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2101106118525573288}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6025378878488859071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8322334601197886819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0037953223c77d54ca7055314be7f0dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JumpUnlockActivator
+  jumpController: {fileID: 0}
 --- !u!1 &9063473484313145564
 GameObject:
   m_ObjectHideFlags: 0

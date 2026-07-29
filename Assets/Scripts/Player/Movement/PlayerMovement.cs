@@ -4,21 +4,25 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerInputReader))]
 [RequireComponent(typeof(PlayerStats))]
 [RequireComponent(typeof(PlayerCollisionResolver))]
+[RequireComponent(typeof(PlayerPushController))]
+[RequireComponent(typeof(PlayerJumpController))]
+[RequireComponent(typeof(PlayerDashController))]
+[RequireComponent(typeof(PlayerKnockbackController))]
 public class PlayerMovement : MonoBehaviour
 {
+    private Rigidbody rb;
+
     private PlayerInputReader inputReader;
     private PlayerStats playerStats;
     private PlayerCollisionResolver collisionResolver;
-    private Rigidbody rb;
+    private PlayerPushController pushController;
+    private PlayerJumpController jumpController;
+    private PlayerDashController dashController;
+    private PlayerKnockbackController knockbackController;
 
     [Header("References")]
     [SerializeField]
     private Transform cameraTransform;
-
-    [Header("Movement State")]
-    private bool isMovementLocked;
-
-    public bool IsMovementLocked => isMovementLocked;
 
     [Header("Movement")]
     [SerializeField]
@@ -30,59 +34,52 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private float rotationSpeed = 12f;
 
+    [Header("Moving Platform")]
+    [SerializeField]
+    [Range(0f, 1f)]
+    private float platformGroundNormalThreshold = 0.5f;
+
+    [Header("State")]
+    private bool isMovementLocked;
+
     private Vector3 currentVelocity;
+
+    private MovingPlatform currentPlatform;
+    private Vector3 lastPlatformPosition;
 
     public bool IsMoving => currentVelocity.sqrMagnitude > 0.01f;
 
-    [Header("Jump")]
-    [SerializeField]
-    private bool canJump = false;
+    public bool IsMovementLocked => isMovementLocked;
 
-    [SerializeField]
-    private bool canDoubleJump = false;
+    public bool IsGrounded => jumpController != null && jumpController.IsGrounded;
 
-    [SerializeField]
-    private float jumpForce = 8f;
+    public bool CanJump => jumpController != null && jumpController.CanJump;
 
-    [SerializeField]
-    private Transform groundCheck;
+    public bool CanDoubleJump => jumpController != null && jumpController.CanDoubleJump;
 
-    [SerializeField]
-    private float groundCheckRadius = 0.2f;
+    public bool IsDashing => dashController != null && dashController.IsDashing;
 
-    [SerializeField]
-    private LayerMask groundLayer;
+    public bool IsKnockbacked => knockbackController != null && knockbackController.IsKnockbacked;
 
-    private bool isGrounded;
-    private bool hasUsedDoubleJump;
-
-    public bool IsGrounded => isGrounded;
-    public bool CanJump => canJump;
-    public bool CanDoubleJump => canDoubleJump;
-
-    [Header("Dash")]
-    [SerializeField]
-    private float dashSpeedMultiplier = 1.8f;
-
-    private bool isDashing;
-    private bool hasDashBoost;
-
-    private Vector3 dashDirection;
-
-    public bool IsDashing => isDashing;
-
-    [Header("Knockback")]
-    private bool isKnockbacked;
-    private float knockbackTimer;
-
-    public bool IsKnockbacked => isKnockbacked;
+    public bool IsPushing => pushController != null && pushController.IsPushing;
 
     private void Awake()
     {
-        inputReader = GetComponent<PlayerInputReader>();
-        playerStats = GetComponent<PlayerStats>();
-        collisionResolver = GetComponent<PlayerCollisionResolver>();
         rb = GetComponent<Rigidbody>();
+
+        inputReader = GetComponent<PlayerInputReader>();
+
+        playerStats = GetComponent<PlayerStats>();
+
+        collisionResolver = GetComponent<PlayerCollisionResolver>();
+
+        pushController = GetComponent<PlayerPushController>();
+
+        jumpController = GetComponent<PlayerJumpController>();
+
+        dashController = GetComponent<PlayerDashController>();
+
+        knockbackController = GetComponent<PlayerKnockbackController>();
 
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
@@ -90,34 +87,70 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        CheckGrounded();
+        UpdateMovingPlatform();
 
-        if (isGrounded)
-            hasUsedDoubleJump = false;
+        jumpController.UpdateGrounded();
 
-        if (isKnockbacked)
+        if (knockbackController.IsKnockbacked)
         {
-            UpdateKnockback();
+            LeaveMovingPlatform();
+
+            pushController.StopPush();
+            dashController.EndDash();
+
+            knockbackController.UpdateKnockback();
+
             return;
         }
 
         if (isMovementLocked)
-            return;
-
-        TryJump();
-
-        if (isDashing)
         {
-            UpdateDash();
+            StopAllMovementStates();
+
+            return;
+        }
+
+        jumpController.TryJump();
+
+        if (!jumpController.IsGrounded)
+        {
+            pushController.StopPush();
+
+            LeaveMovingPlatform();
+        }
+
+        if (dashController.IsDashing)
+        {
+            pushController.StopPush();
+
+            UpdateDashMovement();
+
             return;
         }
 
         TryStartDash();
 
-        if (isDashing)
+        if (dashController.IsDashing)
             return;
 
         MovePlayer();
+    }
+
+    private void UpdateMovingPlatform()
+    {
+        if (currentPlatform == null)
+            return;
+
+        Vector3 platformPosition = currentPlatform.Position;
+
+        Vector3 platformMovement = platformPosition - lastPlatformPosition;
+
+        lastPlatformPosition = platformPosition;
+
+        if (platformMovement.sqrMagnitude <= 0.0000001f)
+            return;
+
+        rb.MovePosition(rb.position + platformMovement);
     }
 
     private void MovePlayer()
@@ -126,22 +159,50 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 desiredDirection = GetCameraRelativeDirection(input);
 
+        if (
+            pushController.UpdatePush(
+                desiredDirection,
+                jumpController.IsGrounded,
+                out Vector3 pushMovement
+            )
+        )
+        {
+            StopHorizontalMovement();
+
+            ApplyMovement(pushMovement);
+
+            return;
+        }
+
         Vector3 allowedDirection = collisionResolver.ResolveDirection(desiredDirection);
 
         bool hasInput = desiredDirection.sqrMagnitude > 0.01f;
+
+        if (collisionResolver.IsPushingAgainstObstacle)
+        {
+            Collider obstacle = collisionResolver.CurrentObstacle;
+
+            pushController.StartPush(desiredDirection, obstacle);
+
+            StopHorizontalMovement();
+
+            if (
+                pushController.UpdatePush(
+                    desiredDirection,
+                    jumpController.IsGrounded,
+                    out pushMovement
+                )
+            )
+                ApplyMovement(pushMovement);
+
+            return;
+        }
 
         bool isBlocked = hasInput && allowedDirection.sqrMagnitude <= 0.01f;
 
         if (isBlocked)
         {
-            currentVelocity = Vector3.zero;
-
-            Vector3 velocity = rb.linearVelocity;
-
-            velocity.x = 0f;
-            velocity.z = 0f;
-
-            rb.linearVelocity = velocity;
+            StopHorizontalMovement();
 
             RotatePlayer(desiredDirection);
 
@@ -160,9 +221,61 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 movement = currentVelocity * Time.fixedDeltaTime;
 
-        rb.MovePosition(rb.position + movement);
+        ApplyMovement(movement);
 
         RotatePlayer(desiredDirection);
+    }
+
+    private void TryStartDash()
+    {
+        if (!inputReader.DashPressed)
+            return;
+
+        inputReader.ConsumeDash();
+
+        Vector3 direction = GetCameraRelativeDirection(inputReader.MoveInput);
+
+        if (direction.sqrMagnitude <= 0.01f)
+            return;
+
+        pushController.StopPush();
+
+        dashController.StartDash(direction);
+
+        RotatePlayer(direction);
+    }
+
+    private void UpdateDashMovement()
+    {
+        Vector3 dashDirection = dashController.DashDirection;
+
+        Vector3 allowedDirection = collisionResolver.ResolveDirection(dashDirection);
+
+        Vector3 movement = allowedDirection * dashController.CurrentSpeed * Time.fixedDeltaTime;
+
+        ApplyMovement(movement);
+
+        RotatePlayer(dashDirection);
+    }
+
+    private void ApplyMovement(Vector3 movement)
+    {
+        if (movement.sqrMagnitude <= 0.0001f)
+            return;
+
+        rb.MovePosition(rb.position + movement);
+    }
+
+    private void StopHorizontalMovement()
+    {
+        currentVelocity = Vector3.zero;
+
+        Vector3 velocity = rb.linearVelocity;
+
+        velocity.x = 0f;
+        velocity.z = 0f;
+
+        rb.linearVelocity = velocity;
     }
 
     private Vector3 GetCameraRelativeDirection(Vector2 input)
@@ -171,9 +284,7 @@ public class PlayerMovement : MonoBehaviour
             return Vector3.zero;
 
         if (cameraTransform == null)
-        {
             return new Vector3(input.x, 0f, input.y).normalized;
-        }
 
         Vector3 cameraForward = cameraTransform.forward;
 
@@ -206,205 +317,71 @@ public class PlayerMovement : MonoBehaviour
         rb.MoveRotation(smoothRotation);
     }
 
-    private void CheckGrounded()
+    private void EnterMovingPlatform(MovingPlatform platform)
     {
-        if (groundCheck == null)
+        if (platform == null)
+            return;
+
+        if (currentPlatform == platform)
+            return;
+
+        currentPlatform = platform;
+
+        lastPlatformPosition = platform.Position;
+    }
+
+    private void LeaveMovingPlatform()
+    {
+        currentPlatform = null;
+
+        lastPlatformPosition = Vector3.zero;
+    }
+
+    private void StopAllMovementStates()
+    {
+        StopHorizontalMovement();
+
+        pushController.StopPush();
+        dashController.EndDash();
+        knockbackController.EndKnockback();
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        MovingPlatform platform = collision.collider.GetComponentInParent<MovingPlatform>();
+
+        if (platform == null)
+            return;
+
+        for (int i = 0; i < collision.contactCount; i++)
         {
-            isGrounded = false;
+            ContactPoint contact = collision.GetContact(i);
+
+            if (contact.normal.y < platformGroundNormalThreshold)
+                continue;
+
+            EnterMovingPlatform(platform);
+
             return;
         }
-
-        isGrounded = Physics.CheckSphere(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer,
-            QueryTriggerInteraction.Ignore
-        );
     }
 
-    private void TryJump()
+    private void OnCollisionExit(Collision collision)
     {
-        if (!inputReader.JumpPressed)
+        if (currentPlatform == null)
             return;
 
-        inputReader.ConsumeJump();
+        MovingPlatform platform = collision.collider.GetComponentInParent<MovingPlatform>();
 
-        if (!canJump)
-            return;
-
-        if (isGrounded)
-        {
-            Jump();
-            return;
-        }
-
-        if (canDoubleJump && !hasUsedDoubleJump)
-        {
-            hasUsedDoubleJump = true;
-
-            Jump();
-        }
-    }
-
-    private void Jump()
-    {
-        Vector3 velocity = rb.linearVelocity;
-
-        velocity.y = 0f;
-
-        rb.linearVelocity = velocity;
-
-        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-    }
-
-    private void TryStartDash()
-    {
-        if (!inputReader.DashPressed)
-            return;
-
-        inputReader.ConsumeDash();
-
-        Vector2 input = inputReader.MoveInput;
-
-        Vector3 direction = GetCameraRelativeDirection(input);
-
-        if (direction.sqrMagnitude <= 0.01f)
-            return;
-
-        StartDash(direction);
-    }
-
-    private void StartDash(Vector3 direction)
-    {
-        isDashing = true;
-        hasDashBoost = false;
-
-        dashDirection = direction.normalized;
-
-        RotatePlayer(dashDirection);
-    }
-
-    private void UpdateDash()
-    {
-        float dashSpeed = playerStats.BaseMoveSpeed;
-
-        if (hasDashBoost)
-            dashSpeed *= dashSpeedMultiplier;
-
-        Vector3 allowedDirection = collisionResolver.ResolveDirection(dashDirection);
-
-        Vector3 movement = allowedDirection * dashSpeed * Time.fixedDeltaTime;
-
-        rb.MovePosition(rb.position + movement);
-
-        RotatePlayer(dashDirection);
-    }
-
-    public void ApplyKnockback(
-        Vector3 direction,
-        float horizontalForce,
-        float upwardForce,
-        float duration
-    )
-    {
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude <= 0.01f)
-            direction = -transform.forward;
-
-        direction.Normalize();
-
-        currentVelocity = Vector3.zero;
-
-        isDashing = false;
-        hasDashBoost = false;
-
-        isKnockbacked = true;
-        knockbackTimer = duration;
-
-        Vector3 velocity = rb.linearVelocity;
-
-        velocity.x = direction.x * horizontalForce;
-
-        velocity.z = direction.z * horizontalForce;
-
-        if (upwardForce > 0f)
-            velocity.y = upwardForce;
-
-        rb.linearVelocity = velocity;
-    }
-
-    private void UpdateKnockback()
-    {
-        knockbackTimer -= Time.fixedDeltaTime;
-
-        if (knockbackTimer > 0f)
-            return;
-
-        EndKnockback();
-    }
-
-    private void EndKnockback()
-    {
-        isKnockbacked = false;
-        knockbackTimer = 0f;
-
-        Vector3 velocity = rb.linearVelocity;
-
-        velocity.x = 0f;
-        velocity.z = 0f;
-
-        rb.linearVelocity = velocity;
-
-        currentVelocity = Vector3.zero;
+        if (platform != null && platform == currentPlatform)
+            LeaveMovingPlatform();
     }
 
     public void SetMovementLocked(bool locked)
     {
         isMovementLocked = locked;
 
-        if (!locked)
-            return;
-
-        currentVelocity = Vector3.zero;
-
-        hasDashBoost = false;
-        isDashing = false;
-
-        if (isKnockbacked)
-            EndKnockback();
-
-        Vector3 velocity = rb.linearVelocity;
-
-        velocity.x = 0f;
-        velocity.z = 0f;
-
-        rb.linearVelocity = velocity;
-    }
-
-    public void UnlockJump()
-    {
-        canJump = true;
-    }
-
-    public void UnlockDoubleJump()
-    {
-        canDoubleJump = true;
-    }
-
-    public void StartDashBoost()
-    {
-        hasDashBoost = true;
-    }
-
-    public void EndDashBoost()
-    {
-        hasDashBoost = false;
-    }
-
-    public void EndDash()
-    {
-        hasDashBoost = false;
-        isDashing = false;
+        if (locked)
+            StopAllMovementStates();
     }
 }

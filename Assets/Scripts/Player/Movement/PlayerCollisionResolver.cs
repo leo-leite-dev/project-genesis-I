@@ -3,13 +3,32 @@ using UnityEngine;
 [RequireComponent(typeof(CapsuleCollider))]
 public class PlayerCollisionResolver : MonoBehaviour
 {
+    private CapsuleCollider capsuleCollider;
+
+    [Header("Collision")]
     [SerializeField]
     private LayerMask obstacleLayers;
 
     [SerializeField]
     private float collisionCheckDistance = 0.1f;
 
-    private CapsuleCollider capsuleCollider;
+    [Header("Sliding")]
+    [SerializeField]
+    [Range(0f, 1f)]
+    private float minSlideSpeedMultiplier = 0.35f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
+    private float maxSlideSpeedMultiplier = 0.9f;
+
+    [Header("Pushing")]
+    [SerializeField]
+    [Range(0f, 1f)]
+    private float pushingThreshold = 0.5f;
+
+    public bool IsPushingAgainstObstacle { get; private set; }
+
+    public Collider CurrentObstacle { get; private set; }
 
     private void Awake()
     {
@@ -18,8 +37,13 @@ public class PlayerCollisionResolver : MonoBehaviour
 
     public Vector3 ResolveDirection(Vector3 desiredDirection)
     {
+        IsPushingAgainstObstacle = false;
+        CurrentObstacle = null;
+
         if (desiredDirection.sqrMagnitude <= 0.01f)
             return Vector3.zero;
+
+        Vector3 normalizedDirection = desiredDirection.normalized;
 
         GetCapsulePoints(out Vector3 bottom, out Vector3 top);
 
@@ -29,7 +53,7 @@ public class PlayerCollisionResolver : MonoBehaviour
             bottom,
             top,
             radius,
-            desiredDirection,
+            normalizedDirection,
             out RaycastHit hit,
             collisionCheckDistance,
             obstacleLayers,
@@ -39,12 +63,37 @@ public class PlayerCollisionResolver : MonoBehaviour
         if (!hitSomething)
             return desiredDirection;
 
+        CurrentObstacle = hit.collider;
+
+        float impactAmount = Mathf.Clamp01(Vector3.Dot(normalizedDirection, -hit.normal));
+
+        PushableObject pushable = hit.collider.GetComponentInParent<PushableObject>();
+
+        bool isPushable = pushable != null;
+
+        if (isPushable && impactAmount >= pushingThreshold)
+        {
+            IsPushingAgainstObstacle = true;
+
+            return Vector3.zero;
+        }
+
         Vector3 slidingDirection = Vector3.ProjectOnPlane(desiredDirection, hit.normal);
+
+        slidingDirection.y = 0f;
 
         if (slidingDirection.sqrMagnitude <= 0.01f)
             return Vector3.zero;
 
-        return slidingDirection.normalized;
+        float slideSpeedMultiplier = Mathf.Lerp(
+            maxSlideSpeedMultiplier,
+            minSlideSpeedMultiplier,
+            impactAmount
+        );
+
+        slidingDirection *= slideSpeedMultiplier;
+
+        return slidingDirection;
     }
 
     private void GetCapsulePoints(out Vector3 bottom, out Vector3 top)

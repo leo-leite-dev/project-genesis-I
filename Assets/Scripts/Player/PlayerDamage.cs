@@ -2,13 +2,13 @@ using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerStats))]
-[RequireComponent(typeof(PlayerMovement))]
 [RequireComponent(typeof(PlayerAnimation))]
+[RequireComponent(typeof(PlayerKnockbackController))]
 public class PlayerDamage : MonoBehaviour
 {
     private PlayerStats playerStats;
-    private PlayerMovement playerMovement;
     private PlayerAnimation playerAnimation;
+    private PlayerKnockbackController knockbackController;
 
     [Header("Invincibility")]
     [SerializeField]
@@ -51,9 +51,9 @@ public class PlayerDamage : MonoBehaviour
     {
         playerStats = GetComponent<PlayerStats>();
 
-        playerMovement = GetComponent<PlayerMovement>();
-
         playerAnimation = GetComponent<PlayerAnimation>();
+
+        knockbackController = GetComponent<PlayerKnockbackController>();
 
         renderers = GetComponentsInChildren<Renderer>(true);
     }
@@ -89,7 +89,7 @@ public class PlayerDamage : MonoBehaviour
         if (direction.sqrMagnitude <= 0.01f)
             direction = -transform.forward;
 
-        playerMovement.ApplyKnockback(
+        knockbackController.ApplyKnockback(
             direction,
             knockbackForce,
             knockbackUpForce,
@@ -178,7 +178,9 @@ public class PlayerDamage : MonoBehaviour
     private void RestoreOriginalPropertyBlocks()
     {
         if (originalPropertyBlocks == null)
+        {
             return;
+        }
 
         for (int i = 0; i < renderers.Length; i++)
         {

@@ -28,20 +28,25 @@ public class PlayerAnimation : MonoBehaviour
         if (playerMovement.IsMovementLocked || playerMovement.IsKnockbacked)
         {
             animator.SetFloat("Speed", 0f);
+            animator.SetBool("IsPushing", false);
 
             wasDashing = false;
 
             return;
         }
 
+        bool isPushing = playerMovement.IsPushing;
+
         float speed = inputReader.MoveInput.magnitude;
 
-        if (!playerMovement.IsGrounded)
+        if (!playerMovement.IsGrounded || isPushing)
             speed = 0f;
 
         animator.SetFloat("Speed", speed);
 
         animator.SetBool("IsSlowed", playerStats.IsSlowed);
+
+        animator.SetBool("IsPushing", isPushing);
 
         if (playerMovement.IsDashing && !wasDashing)
             animator.SetTrigger("Dash");

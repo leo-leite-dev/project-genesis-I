@@ -3,14 +3,14 @@ using UnityEngine;
 public class JumpUnlockActivator : MonoBehaviour, IActivatable
 {
     [SerializeField]
-    private PlayerMovement playerMovement;
+    private PlayerJumpController jumpController;
 
     public void Activate()
     {
-        if (playerMovement == null)
+        if (jumpController == null)
             return;
 
-        playerMovement.UnlockJump();
+        jumpController.UnlockJump();
 
         Debug.Log("Jump desbloqueado!");
     }
