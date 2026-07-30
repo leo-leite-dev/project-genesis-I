@@ -1411,6 +1411,7 @@ GameObject:
   - component: {fileID: 1721339615984843725}
   - component: {fileID: 6874997876322434548}
   - component: {fileID: 5571102099452184960}
+  - component: {fileID: 899804529636894234}
   - component: {fileID: 4118830681312688234}
   - component: {fileID: 3473022192115968589}
   - component: {fileID: 4765698966412097601}
@@ -1581,6 +1582,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 264
   collisionCheckDistance: 0.2
+  capsuleRadiusMultiplier: 0.95
   pushingThreshold: 0.5
 --- !u!114 &6621590207402248358
 MonoBehaviour:
@@ -1627,7 +1629,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bb413b1a07b3304fbc84f55dfc31a98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPushController
-  directionThreshold: 0.9
+  alignmentSpeed: 4
+  alignmentRotationSpeed: 540
+  positionTolerance: 0.02
+  rotationTolerance: 1
+  releaseDirectionThreshold: 0.4
 --- !u!114 &5571102099452184960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1640,6 +1646,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52eae82e88d5b9d43b3b5719ddd3e8fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerKnockbackController
+--- !u!114 &899804529636894234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4639283682780731344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d3b6a840b399c84cba97e0bcd241cce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPlatformController
+  groundNormalThreshold: 0.5
 --- !u!114 &4118830681312688234
 MonoBehaviour:
   m_ObjectHideFlags: 0

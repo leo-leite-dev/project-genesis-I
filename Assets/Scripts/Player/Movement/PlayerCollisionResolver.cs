@@ -12,14 +12,9 @@ public class PlayerCollisionResolver : MonoBehaviour
     [SerializeField]
     private float collisionCheckDistance = 0.1f;
 
-    [Header("Sliding")]
     [SerializeField]
-    [Range(0f, 1f)]
-    private float minSlideSpeedMultiplier = 0.35f;
-
-    [SerializeField]
-    [Range(0f, 1f)]
-    private float maxSlideSpeedMultiplier = 0.9f;
+    [Range(0.8f, 1f)]
+    private float capsuleRadiusMultiplier = 0.95f;
 
     [Header("Pushing")]
     [SerializeField]
@@ -37,63 +32,82 @@ public class PlayerCollisionResolver : MonoBehaviour
 
     public Vector3 ResolveDirection(Vector3 desiredDirection)
     {
-        IsPushingAgainstObstacle = false;
-        CurrentObstacle = null;
+        ResetCollisionState();
 
-        if (desiredDirection.sqrMagnitude <= 0.01f)
+        Vector3 horizontalDirection = GetHorizontalDirection(desiredDirection);
+
+        if (horizontalDirection.sqrMagnitude <= 0.01f)
             return Vector3.zero;
 
-        Vector3 normalizedDirection = desiredDirection.normalized;
+        if (!TryGetObstacleHit(horizontalDirection, out RaycastHit hit))
+            return horizontalDirection;
 
+        SetCurrentObstacle(hit.collider);
+
+        UpdatePushState(horizontalDirection, hit.normal);
+
+        if (IsPushingAgainstObstacle)
+            return Vector3.zero;
+
+        return GetSlidingDirection(horizontalDirection, hit.normal);
+    }
+
+    private Vector3 GetHorizontalDirection(Vector3 direction)
+    {
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude <= 0.01f)
+            return Vector3.zero;
+
+        return direction.normalized;
+    }
+
+    private bool TryGetObstacleHit(Vector3 direction, out RaycastHit hit)
+    {
         GetCapsulePoints(out Vector3 bottom, out Vector3 top);
 
-        float radius = GetWorldRadius() * 0.95f;
+        float radius = GetWorldRadius() * capsuleRadiusMultiplier;
 
-        bool hitSomething = Physics.CapsuleCast(
+        return Physics.CapsuleCast(
             bottom,
             top,
             radius,
-            normalizedDirection,
-            out RaycastHit hit,
+            direction,
+            out hit,
             collisionCheckDistance,
             obstacleLayers,
             QueryTriggerInteraction.Ignore
         );
+    }
 
-        if (!hitSomething)
-            return desiredDirection;
+    private void SetCurrentObstacle(Collider obstacle)
+    {
+        CurrentObstacle = obstacle;
+    }
 
-        CurrentObstacle = hit.collider;
+    private void UpdatePushState(Vector3 desiredDirection, Vector3 obstacleNormal)
+    {
+        float pushingAmount = Vector3.Dot(desiredDirection, -obstacleNormal);
 
-        float impactAmount = Mathf.Clamp01(Vector3.Dot(normalizedDirection, -hit.normal));
+        IsPushingAgainstObstacle = pushingAmount >= pushingThreshold;
+    }
 
-        PushableObject pushable = hit.collider.GetComponentInParent<PushableObject>();
-
-        bool isPushable = pushable != null;
-
-        if (isPushable && impactAmount >= pushingThreshold)
-        {
-            IsPushingAgainstObstacle = true;
-
-            return Vector3.zero;
-        }
-
-        Vector3 slidingDirection = Vector3.ProjectOnPlane(desiredDirection, hit.normal);
+    private Vector3 GetSlidingDirection(Vector3 desiredDirection, Vector3 obstacleNormal)
+    {
+        Vector3 slidingDirection = Vector3.ProjectOnPlane(desiredDirection, obstacleNormal);
 
         slidingDirection.y = 0f;
 
         if (slidingDirection.sqrMagnitude <= 0.01f)
             return Vector3.zero;
 
-        float slideSpeedMultiplier = Mathf.Lerp(
-            maxSlideSpeedMultiplier,
-            minSlideSpeedMultiplier,
-            impactAmount
-        );
+        return slidingDirection.normalized;
+    }
 
-        slidingDirection *= slideSpeedMultiplier;
-
-        return slidingDirection;
+    private void ResetCollisionState()
+    {
+        IsPushingAgainstObstacle = false;
+        CurrentObstacle = null;
     }
 
     private void GetCapsulePoints(out Vector3 bottom, out Vector3 top)

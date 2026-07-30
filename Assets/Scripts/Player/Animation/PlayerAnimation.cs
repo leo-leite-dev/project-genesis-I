@@ -1,21 +1,39 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerInputReader))]
+[RequireComponent(typeof(PlayerStats))]
+[RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(PlayerJumpController))]
+[RequireComponent(typeof(PlayerDashController))]
+[RequireComponent(typeof(PlayerPushController))]
+[RequireComponent(typeof(PlayerKnockbackController))]
 public class PlayerAnimation : MonoBehaviour
 {
     private Animator animator;
+
     private PlayerInputReader inputReader;
     private PlayerStats playerStats;
     private PlayerMovement playerMovement;
+
+    private PlayerJumpController jumpController;
+    private PlayerDashController dashController;
+    private PlayerPushController pushController;
+    private PlayerKnockbackController knockbackController;
 
     private bool wasDashing;
 
     private void Awake()
     {
         animator = GetComponentInChildren<Animator>();
+
         inputReader = GetComponent<PlayerInputReader>();
         playerStats = GetComponent<PlayerStats>();
         playerMovement = GetComponent<PlayerMovement>();
+
+        jumpController = GetComponent<PlayerJumpController>();
+        dashController = GetComponent<PlayerDashController>();
+        pushController = GetComponent<PlayerPushController>();
+        knockbackController = GetComponent<PlayerKnockbackController>();
     }
 
     private void Update()
@@ -25,22 +43,18 @@ public class PlayerAnimation : MonoBehaviour
 
     private void UpdateAnimation()
     {
-        if (playerMovement.IsMovementLocked || playerMovement.IsKnockbacked)
+        if (playerMovement.IsMovementLocked || knockbackController.IsKnockbacked)
         {
-            animator.SetFloat("Speed", 0f);
-            animator.SetBool("IsPushing", false);
+            StopMovementAnimation();
 
             wasDashing = false;
 
             return;
         }
 
-        bool isPushing = playerMovement.IsPushing;
+        bool isPushing = pushController.IsPushing;
 
-        float speed = inputReader.MoveInput.magnitude;
-
-        if (!playerMovement.IsGrounded || isPushing)
-            speed = 0f;
+        float speed = GetMovementAnimationSpeed(isPushing);
 
         animator.SetFloat("Speed", speed);
 
@@ -48,10 +62,35 @@ public class PlayerAnimation : MonoBehaviour
 
         animator.SetBool("IsPushing", isPushing);
 
-        if (playerMovement.IsDashing && !wasDashing)
+        UpdateDashAnimation();
+    }
+
+    private float GetMovementAnimationSpeed(bool isPushing)
+    {
+        if (!jumpController.IsGrounded)
+            return 0f;
+
+        if (isPushing)
+            return 0f;
+
+        return inputReader.MoveInput.magnitude;
+    }
+
+    private void UpdateDashAnimation()
+    {
+        bool isDashing = dashController.IsDashing;
+
+        if (isDashing && !wasDashing)
             animator.SetTrigger("Dash");
 
-        wasDashing = playerMovement.IsDashing;
+        wasDashing = isDashing;
+    }
+
+    private void StopMovementAnimation()
+    {
+        animator.SetFloat("Speed", 0f);
+
+        animator.SetBool("IsPushing", false);
     }
 
     public void PlayHit()

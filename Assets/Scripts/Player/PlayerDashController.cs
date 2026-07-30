@@ -1,9 +1,11 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerStats))]
+[RequireComponent(typeof(PlayerInputReader))]
 public class PlayerDashController : MonoBehaviour
 {
     private PlayerStats playerStats;
+    private PlayerInputReader inputReader;
 
     [Header("Dash")]
     [SerializeField]
@@ -15,6 +17,8 @@ public class PlayerDashController : MonoBehaviour
     private Vector3 dashDirection;
 
     public bool IsDashing => isDashing;
+
+    public bool HasDashBoost => hasDashBoost;
 
     public Vector3 DashDirection => dashDirection;
 
@@ -34,19 +38,40 @@ public class PlayerDashController : MonoBehaviour
     private void Awake()
     {
         playerStats = GetComponent<PlayerStats>();
+        inputReader = GetComponent<PlayerInputReader>();
     }
 
-    public void StartDash(Vector3 direction)
+    public bool TryStartDash(Vector3 direction)
     {
+        if (!inputReader.DashPressed)
+            return false;
+
+        inputReader.ConsumeDash();
+
+        if (isDashing)
+            return false;
+
         direction.y = 0f;
 
         if (direction.sqrMagnitude <= 0.01f)
-            return;
+            return false;
 
-        isDashing = true;
-        hasDashBoost = false;
+        StartDash(direction);
 
-        dashDirection = direction.normalized;
+        return true;
+    }
+
+    public Vector3 GetMovement(Vector3 allowedDirection, float deltaTime)
+    {
+        if (!isDashing)
+            return Vector3.zero;
+
+        allowedDirection.y = 0f;
+
+        if (allowedDirection.sqrMagnitude <= 0.01f)
+            return Vector3.zero;
+
+        return allowedDirection.normalized * CurrentSpeed * deltaTime;
     }
 
     public void StartDashBoost()
@@ -64,9 +89,17 @@ public class PlayerDashController : MonoBehaviour
 
     public void EndDash()
     {
-        hasDashBoost = false;
         isDashing = false;
+        hasDashBoost = false;
 
         dashDirection = Vector3.zero;
+    }
+
+    private void StartDash(Vector3 direction)
+    {
+        isDashing = true;
+        hasDashBoost = false;
+
+        dashDirection = direction.normalized;
     }
 }

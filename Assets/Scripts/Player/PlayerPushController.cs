@@ -27,6 +27,7 @@ public class PlayerPushController : MonoBehaviour
     private Transform currentPushPoint;
 
     private Vector3 pushingDirection;
+    private Vector3 pushFollowOffset;
 
     private bool isPushActive;
     private bool isAligned;
@@ -40,55 +41,15 @@ public class PlayerPushController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
     }
 
-    public void StartPush(Vector3 direction, Collider obstacle)
-    {
-        if (isPushActive)
-            return;
-
-        if (direction.sqrMagnitude <= 0.01f)
-            return;
-
-        if (obstacle == null)
-            return;
-
-        PushableObject pushable = obstacle.GetComponentInParent<PushableObject>();
-
-        if (pushable == null)
-            return;
-
-        bool setupFound = pushable.TryGetPushSetup(
-            rb.position,
-            out Transform pushPoint,
-            out Vector3 pushDirection
-        );
-
-        if (!setupFound)
-            return;
-
-        currentPushable = pushable;
-        currentPushPoint = pushPoint;
-
-        pushingDirection = pushDirection;
-        pushingDirection.y = 0f;
-
-        if (pushingDirection.sqrMagnitude <= 0.01f)
-        {
-            StopPush();
-            return;
-        }
-
-        pushingDirection.Normalize();
-
-        isPushActive = true;
-        isAligned = false;
-    }
-
-    public bool UpdatePush(Vector3 desiredDirection, bool isGrounded, out Vector3 pushMovement)
+    public bool TryGetMovement(
+        Vector3 desiredDirection,
+        bool isGrounded,
+        bool isPushingAgainstObstacle,
+        Collider obstacle,
+        out Vector3 pushMovement
+    )
     {
         pushMovement = Vector3.zero;
-
-        if (!isPushActive)
-            return false;
 
         if (!isGrounded)
         {
@@ -96,31 +57,103 @@ public class PlayerPushController : MonoBehaviour
             return false;
         }
 
-        if (currentPushable == null || currentPushPoint == null)
+        if (!isPushActive)
+        {
+            if (!CanStartPush(isPushingAgainstObstacle, obstacle))
+                return false;
+
+            if (!TryStartPush(desiredDirection, obstacle))
+                return false;
+        }
+
+        return UpdatePush(desiredDirection, out pushMovement);
+    }
+
+    public void StopPush()
+    {
+        isPushActive = false;
+        isAligned = false;
+
+        currentPushable = null;
+        currentPushPoint = null;
+
+        pushingDirection = Vector3.zero;
+        pushFollowOffset = Vector3.zero;
+    }
+
+    private bool CanStartPush(bool isPushingAgainstObstacle, Collider obstacle)
+    {
+        if (!isPushingAgainstObstacle)
+            return false;
+
+        if (obstacle == null)
+            return false;
+
+        return obstacle.GetComponentInParent<PushableObject>() != null;
+    }
+
+    private bool TryStartPush(Vector3 desiredDirection, Collider obstacle)
+    {
+        if (isPushActive)
+            return true;
+
+        if (desiredDirection.sqrMagnitude <= 0.01f)
+            return false;
+
+        if (obstacle == null)
+            return false;
+
+        PushableObject pushable = obstacle.GetComponentInParent<PushableObject>();
+
+        if (pushable == null)
+            return false;
+
+        if (
+            !pushable.TryGetPushSetup(
+                rb.position,
+                out Transform pushPoint,
+                out Vector3 pushDirection
+            )
+        )
+        {
+            return false;
+        }
+
+        if (pushPoint == null)
+            return false;
+
+        pushDirection.y = 0f;
+
+        if (pushDirection.sqrMagnitude <= 0.01f)
+            return false;
+
+        currentPushable = pushable;
+        currentPushPoint = pushPoint;
+
+        pushingDirection = pushDirection.normalized;
+        pushFollowOffset = Vector3.zero;
+
+        isPushActive = true;
+        isAligned = false;
+
+        return true;
+    }
+
+    private bool UpdatePush(Vector3 desiredDirection, out Vector3 pushMovement)
+    {
+        pushMovement = Vector3.zero;
+
+        if (!HasValidPushTarget())
         {
             StopPush();
             return false;
         }
 
-        if (desiredDirection.sqrMagnitude <= 0.01f)
+        if (!TryGetPushInputAmount(desiredDirection, out float directionAmount))
         {
             StopPush();
             return true;
         }
-
-        Vector3 normalizedDirection = desiredDirection;
-
-        normalizedDirection.y = 0f;
-
-        if (normalizedDirection.sqrMagnitude <= 0.01f)
-        {
-            StopPush();
-            return true;
-        }
-
-        normalizedDirection.Normalize();
-
-        float directionAmount = Vector3.Dot(normalizedDirection, pushingDirection);
 
         if (directionAmount <= -releaseDirectionThreshold)
         {
@@ -134,23 +167,49 @@ public class PlayerPushController : MonoBehaviour
         if (!isAligned)
         {
             UpdateAlignment(out pushMovement);
-
             return true;
         }
 
-        LockRotationToPushDirection();
+        UpdateActivePush(out pushMovement);
 
-        Vector3 pushPointBeforeMovement = currentPushPoint.position;
+        return true;
+    }
+
+    private bool HasValidPushTarget()
+    {
+        return isPushActive && currentPushable != null && currentPushPoint != null;
+    }
+
+    private bool TryGetPushInputAmount(Vector3 desiredDirection, out float directionAmount)
+    {
+        directionAmount = 0f;
+
+        if (desiredDirection.sqrMagnitude <= 0.01f)
+            return false;
+
+        Vector3 normalizedDirection = desiredDirection;
+
+        normalizedDirection.y = 0f;
+
+        if (normalizedDirection.sqrMagnitude <= 0.01f)
+            return false;
+
+        normalizedDirection.Normalize();
+
+        directionAmount = Vector3.Dot(normalizedDirection, pushingDirection);
+
+        return true;
+    }
+
+    private void UpdateActivePush(out Vector3 pushMovement)
+    {
+        LockRotationToPushDirection();
 
         Vector3 boxMovement = currentPushable.TryPush(currentPushPoint);
 
-        Vector3 targetPosition = pushPointBeforeMovement + boxMovement;
+        Vector3 followCorrection = GetPushFollowCorrection();
 
-        targetPosition.y = rb.position.y;
-
-        pushMovement = targetPosition - rb.position;
-
-        return true;
+        pushMovement = boxMovement + followCorrection;
     }
 
     private void UpdateAlignment(out Vector3 alignmentMovement)
@@ -200,11 +259,37 @@ public class PlayerPushController : MonoBehaviour
         if (!positionAligned || !rotationAligned)
             return;
 
-        alignmentMovement = targetPosition - rb.position;
+        CompleteAlignment(targetRotation);
+    }
 
+    private void CompleteAlignment(Quaternion targetRotation)
+    {
         rb.MoveRotation(targetRotation);
 
+        pushFollowOffset = rb.position - currentPushPoint.position;
+
+        pushFollowOffset.y = 0f;
+
         isAligned = true;
+    }
+
+    private Vector3 GetPushFollowCorrection()
+    {
+        if (currentPushPoint == null)
+            return Vector3.zero;
+
+        Vector3 targetPosition = currentPushPoint.position + pushFollowOffset;
+
+        targetPosition.y = rb.position.y;
+
+        Vector3 offset = targetPosition - rb.position;
+
+        offset.y = 0f;
+
+        if (offset.sqrMagnitude <= positionTolerance * positionTolerance)
+            return Vector3.zero;
+
+        return Vector3.MoveTowards(Vector3.zero, offset, alignmentSpeed * Time.fixedDeltaTime);
     }
 
     private void LockRotationToPushDirection()
@@ -215,16 +300,5 @@ public class PlayerPushController : MonoBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(pushingDirection, Vector3.up);
 
         rb.MoveRotation(targetRotation);
-    }
-
-    public void StopPush()
-    {
-        isPushActive = false;
-        isAligned = false;
-
-        pushingDirection = Vector3.zero;
-
-        currentPushPoint = null;
-        currentPushable = null;
     }
 }

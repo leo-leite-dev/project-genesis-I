@@ -11,8 +11,7 @@ GameObject:
   - component: {fileID: 1788603879022669767}
   - component: {fileID: 2624293159330497363}
   - component: {fileID: 6422465297872444192}
-  - component: {fileID: 543853640207877348}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BoxPusable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67,7 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6f8a22a830d0bfc4e92ab0cc0aa1b8b5, type: 2}
+  - {fileID: 2100000, guid: 4bca999ab1da9294ea5d575e41073b88, type: 2}
   - {fileID: 2100000, guid: 14562ff1e56b3424c83b07a3e25b9414, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -92,24 +91,3 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &543853640207877348
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5741591184186878543}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.67662, y: 0.67662, z: 0.67662}
-  m_Center: {x: 0, y: 0, z: 0}

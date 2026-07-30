@@ -28,9 +28,13 @@ public class PlayerJumpController : MonoBehaviour
     private LayerMask groundLayer;
 
     private bool isGrounded;
+    private bool wasGrounded;
+    private bool isJumping;
     private bool hasUsedDoubleJump;
 
     public bool IsGrounded => isGrounded;
+
+    public bool IsJumping => isJumping;
 
     public bool CanJump => canJump;
 
@@ -46,11 +50,56 @@ public class PlayerJumpController : MonoBehaviour
 
     public void UpdateGrounded()
     {
+        wasGrounded = isGrounded;
+
+        DetectGround();
+
+        if (!isGrounded)
+            return;
+
+        if (!wasGrounded)
+            OnLanded();
+    }
+
+    public void TryJump()
+    {
+        if (!inputReader.JumpPressed)
+            return;
+
+        inputReader.ConsumeJump();
+
+        if (!canJump)
+            return;
+
+        if (CanPerformGroundJump())
+        {
+            PerformJump(true);
+            return;
+        }
+
+        if (CanPerformDoubleJump())
+        {
+            hasUsedDoubleJump = true;
+
+            PerformJump(false);
+        }
+    }
+
+    public void UnlockJump()
+    {
+        canJump = true;
+    }
+
+    public void UnlockDoubleJump()
+    {
+        canDoubleJump = true;
+    }
+
+    private void DetectGround()
+    {
         if (groundCheck == null)
         {
-            isGrounded = false;
-            GroundCollider = null;
-
+            SetNotGrounded();
             return;
         }
 
@@ -64,13 +113,46 @@ public class PlayerJumpController : MonoBehaviour
         if (!isGrounded)
         {
             GroundCollider = null;
-
             return;
         }
 
         GroundCollider = FindGroundCollider();
+    }
 
-        hasUsedDoubleJump = false;
+    private bool CanPerformGroundJump()
+    {
+        return isGrounded && !isJumping;
+    }
+
+    private bool CanPerformDoubleJump()
+    {
+        return canDoubleJump && !isGrounded && !hasUsedDoubleJump;
+    }
+
+    private void PerformJump(bool inheritGroundVelocity)
+    {
+        isJumping = true;
+
+        Vector3 velocity = rb.linearVelocity;
+
+        velocity.y = inheritGroundVelocity ? GetGroundVerticalVelocity() : 0f;
+
+        rb.linearVelocity = velocity;
+
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+    }
+
+    private float GetGroundVerticalVelocity()
+    {
+        if (GroundCollider == null)
+            return 0f;
+
+        MovingPlatform platform = GroundCollider.GetComponentInParent<MovingPlatform>();
+
+        if (platform == null)
+            return 0f;
+
+        return platform.Velocity.y;
     }
 
     private Collider FindGroundCollider()
@@ -101,49 +183,15 @@ public class PlayerJumpController : MonoBehaviour
         return colliders[0];
     }
 
-    public void TryJump()
+    private void OnLanded()
     {
-        if (!inputReader.JumpPressed)
-            return;
-
-        inputReader.ConsumeJump();
-
-        if (!canJump)
-            return;
-
-        if (isGrounded)
-        {
-            Jump();
-
-            return;
-        }
-
-        if (canDoubleJump && !hasUsedDoubleJump)
-        {
-            hasUsedDoubleJump = true;
-
-            Jump();
-        }
+        isJumping = false;
+        hasUsedDoubleJump = false;
     }
 
-    private void Jump()
+    private void SetNotGrounded()
     {
-        Vector3 velocity = rb.linearVelocity;
-
-        velocity.y = 0f;
-
-        rb.linearVelocity = velocity;
-
-        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-    }
-
-    public void UnlockJump()
-    {
-        canJump = true;
-    }
-
-    public void UnlockDoubleJump()
-    {
-        canDoubleJump = true;
+        isGrounded = false;
+        GroundCollider = null;
     }
 }

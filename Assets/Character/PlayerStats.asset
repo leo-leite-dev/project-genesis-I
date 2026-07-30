@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 769dd50cd67114143b7c7725247ce419, type: 3}
   m_Name: PlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsData
-  baseMoveSpeed: 4
+  baseMoveSpeed: 3
   baseHearts: 3
   baseLife: 5

@@ -25,6 +25,10 @@ public class MovingPlatform : MonoBehaviour, IActivatable
 
     public Vector3 Position => rb.position;
 
+    public Vector3 Velocity { get; private set; }
+
+    public bool IsActive => isActive;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,25 +45,31 @@ public class MovingPlatform : MonoBehaviour, IActivatable
 
     private void FixedUpdate()
     {
+        Velocity = Vector3.zero;
+
         if (!isActive)
             return;
 
-        Vector3 destination = movingToTarget ? targetPosition : startPosition;
+        Vector3 currentPosition = rb.position;
+
+        Vector3 destination = movingToTarget
+            ? targetPosition
+            : startPosition;
 
         Vector3 nextPosition = Vector3.MoveTowards(
-            rb.position,
+            currentPosition,
             destination,
             moveSpeed * Time.fixedDeltaTime
         );
 
+        Velocity =
+            (nextPosition - currentPosition) /
+            Time.fixedDeltaTime;
+
         rb.MovePosition(nextPosition);
 
-        if (Vector3.Distance(nextPosition, destination) <= 0.001f)
-        {
-            rb.MovePosition(destination);
-
+        if ((nextPosition - destination).sqrMagnitude <= 0.000001f)
             movingToTarget = !movingToTarget;
-        }
     }
 
     public void Activate()
@@ -70,5 +80,7 @@ public class MovingPlatform : MonoBehaviour, IActivatable
     public void Deactivate()
     {
         isActive = false;
+
+        Velocity = Vector3.zero;
     }
 }

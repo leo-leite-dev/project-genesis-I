@@ -22,26 +22,13 @@ public class PlayerKnockbackController : MonoBehaviour
         float duration
     )
     {
-        direction.y = 0f;
+        direction = GetValidDirection(direction);
 
-        if (direction.sqrMagnitude <= 0.01f)
-            direction = -transform.forward;
+        horizontalForce = Mathf.Max(0f, horizontalForce);
+        upwardForce = Mathf.Max(0f, upwardForce);
+        duration = Mathf.Max(0f, duration);
 
-        direction.Normalize();
-
-        isKnockbacked = true;
-        knockbackTimer = duration;
-
-        Vector3 velocity = rb.linearVelocity;
-
-        velocity.x = direction.x * horizontalForce;
-
-        velocity.z = direction.z * horizontalForce;
-
-        if (upwardForce > 0f)
-            velocity.y = upwardForce;
-
-        rb.linearVelocity = velocity;
+        StartKnockback(direction, horizontalForce, upwardForce, duration);
     }
 
     public void UpdateKnockback()
@@ -65,6 +52,46 @@ public class PlayerKnockbackController : MonoBehaviour
         isKnockbacked = false;
         knockbackTimer = 0f;
 
+        ClearHorizontalVelocity();
+    }
+
+    private void StartKnockback(
+        Vector3 direction,
+        float horizontalForce,
+        float upwardForce,
+        float duration
+    )
+    {
+        isKnockbacked = true;
+        knockbackTimer = duration;
+
+        Vector3 velocity = rb.linearVelocity;
+
+        velocity.x = direction.x * horizontalForce;
+
+        velocity.z = direction.z * horizontalForce;
+
+        if (upwardForce > 0f)
+            velocity.y = upwardForce;
+
+        rb.linearVelocity = velocity;
+
+        if (knockbackTimer <= 0f)
+            EndKnockback();
+    }
+
+    private Vector3 GetValidDirection(Vector3 direction)
+    {
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude <= 0.01f)
+            direction = -transform.forward;
+
+        return direction.normalized;
+    }
+
+    private void ClearHorizontalVelocity()
+    {
         Vector3 velocity = rb.linearVelocity;
 
         velocity.x = 0f;

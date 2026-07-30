@@ -1,24 +1,25 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(PlayerJumpController))]
+[RequireComponent(typeof(PlayerDashController))]
 public class PlayerMovementVFX : MonoBehaviour
 {
+    private PlayerMovement playerMovement;
+    private PlayerJumpController jumpController;
+    private PlayerDashController dashController;
+
     [Header("References")]
     [SerializeField]
     private ParticleSystem runDust;
 
-    private PlayerMovement playerMovement;
-
     private void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
+        jumpController = GetComponent<PlayerJumpController>();
+        dashController = GetComponent<PlayerDashController>();
 
-        if (runDust != null)
-        {
-            runDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-
-            runDust.Clear(true);
-        }
+        StopRunDust(true);
     }
 
     private void Update()
@@ -31,20 +32,45 @@ public class PlayerMovementVFX : MonoBehaviour
         if (runDust == null)
             return;
 
-        bool shouldPlay =
-            (playerMovement.IsMoving || playerMovement.IsDashing)
-            && playerMovement.IsGrounded
-            && !playerMovement.IsMovementLocked;
+        bool isMoving = playerMovement.IsMoving || dashController.IsDashing;
+
+        bool shouldPlay = isMoving && jumpController.IsGrounded && !playerMovement.IsMovementLocked;
 
         if (shouldPlay)
         {
-            if (!runDust.isPlaying)
-                runDust.Play(true);
+            PlayRunDust();
+            return;
         }
-        else
-        {
-            if (runDust.isPlaying)
-                runDust.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-        }
+
+        StopRunDust(false);
+    }
+
+    private void PlayRunDust()
+    {
+        if (runDust == null)
+            return;
+
+        if (runDust.isPlaying)
+            return;
+
+        runDust.Play(true);
+    }
+
+    private void StopRunDust(bool clearParticles)
+    {
+        if (runDust == null)
+            return;
+
+        ParticleSystemStopBehavior stopBehavior = clearParticles
+            ? ParticleSystemStopBehavior.StopEmittingAndClear
+            : ParticleSystemStopBehavior.StopEmitting;
+
+        if (!runDust.isPlaying && !clearParticles)
+            return;
+
+        runDust.Stop(true, stopBehavior);
+
+        if (clearParticles)
+            runDust.Clear(true);
     }
 }
